@@ -1,12 +1,12 @@
 package jm.task.core.jdbc.dao;
 
-import com.mysql.cj.protocol.Resultset;
 import jm.task.core.jdbc.model.User;
-import jm.task.core.jdbc.util.Util;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import static jm.task.core.jdbc.util.Util.con;
 
 public class UserDaoJDBCImpl implements UserDao {
     private static final String SELECT_ALL = "SELECT * FROM users";
@@ -22,49 +22,68 @@ public class UserDaoJDBCImpl implements UserDao {
     }
 
     public void createUsersTable() {
-        Connection con = Util.getConnection();
         try (Statement statement = con.createStatement()) {
             statement.execute(CREATE_TABLE);
+            con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     public void dropUsersTable() {
-        Connection con = Util.getConnection();
         try (Statement statement = con.createStatement()) {
             statement.execute(DROP_TABLE);
+            con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        Connection con = Util.getConnection();
         try (PreparedStatement prepState = con.prepareStatement(SAVE_STUDENT)) {
             prepState.setString(1, name);
             prepState.setString(2, lastName);
             prepState.setByte(3, age);
             prepState.executeUpdate();
             System.out.println("User с именем " + name + " добавлен в базу данных");
+            con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     public void removeUserById(long id) {
-        Connection con = Util.getConnection();
         try (PreparedStatement prepState = con.prepareStatement(REMOVE_BY_ID)) {
             prepState.setLong(1, id);
             prepState.executeUpdate();
+            con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     public List<User> getAllUsers() {
         List<User> allUsers = new ArrayList<>();
-        Connection con = Util.getConnection();
         try (PreparedStatement prepState = con.prepareStatement(SELECT_ALL)) {
             ResultSet resSet = prepState.executeQuery();
             while (resSet.next()) {
@@ -73,16 +92,26 @@ public class UserDaoJDBCImpl implements UserDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
         return allUsers;
     }
 
     public void cleanUsersTable() {
-        Connection con = Util.getConnection();
         try (PreparedStatement prepState = con.prepareStatement(CLEAN_TABLE)) {
             prepState.executeUpdate();
+            con.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                con.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 }
